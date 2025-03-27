@@ -25,11 +25,12 @@ def start(message):
     print(f'Chat ID: {chat_id}')
     bot.send_message(chat_id, 'Привет! Я бот, который отправляет самую популярную картинку с e621. Просто напиши /porn и я ее отправлю!')
 
+# Функция для обработки команды /porn
 @bot.message_handler(commands=['porn'])
 def porn(nessage):
     send_image()
 
-# Функция для получения самой популярной картинки с e621s
+# Функция для получения самой популярной картинки с e621.net
 def get_most_image_data():
     url = 'https://e621.net/posts.json'
     headers = {
@@ -38,7 +39,10 @@ def get_most_image_data():
 
     params = {
         'limit': 1,
-        'popular': 1,
+        'tags':{
+            'order':'score',
+            'date':'day'
+        }
     }
 
     proxies = {
