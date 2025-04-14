@@ -1,15 +1,20 @@
 import asyncio
 import logging
+import os
+from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiohttp import ClientSession, BasicAuth
 from aiogram import Router
 
-# Configuration
-TOKEN = 'MY_TOKEN'
-E621_API_KEY = 'API_KEY'
-E621_USERNAME = "MY_NAME"
+# Загружаем переменные окружения из .env
+load_dotenv()
+
+# Ключи
+TOKEN = os.getenv("TOKEN")
+E621_USERNAME = os.getenv("E621_USERNAME")
+E621_API_KEY = os.getenv("E621_API_KEY")
 USER_AGENT = 'FurryTuesdayBot/1.0 (by @me)'
 
 # Иниициалищация
