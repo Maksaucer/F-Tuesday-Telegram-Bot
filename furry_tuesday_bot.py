@@ -1,86 +1,94 @@
-import telebot
-import schedule
-import time
-import requests
-from requests.auth import HTTPBasicAuth
+import asyncio
+import logging
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import Message
+from aiogram.filters import Command
+from aiohttp import ClientSession, BasicAuth
+from aiogram import Router
 
+# Configuration
 TOKEN = 'MY_TOKEN'
 E621_API_KEY = 'API_KEY'
-USERNAME = "MY_NAME"
+E621_USERNAME = "MY_NAME"
+USER_AGENT = 'FurryTuesdayBot/1.0 (by @me)'
 
-# Инициализация бота
-bot = telebot.TeleBot(TOKEN)
+# Иниициалищация
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+router = Router()
+chat_id = None
 
-# Переменная для хранения chat_id
-chat_id = 712363460 # None
+# Логирование
+logging.basicConfig(level=logging.INFO)
 
-# Функция для обработки команды /start
-@bot.message_handler(commands=['start'])
-def start(message):
-    global chat_id
-    chat_id = message.chat.id
-    print(f'Chat ID: {chat_id}')
-    bot.send_message(chat_id, 'Привет! Я бот, который отправляет самую популярную картинку с e621. Просто напиши /porn и я ее отправлю!')
-
-# Функция для обработки команды /porn
-@bot.message_handler(commands=['porn'])
-def porn(nessage):
-    send_image()
-
-# Функция для получения самой популярной картинки с e621.net
-def get_most_image_data():
+# Получить картинку с e621
+async def get_most_image_data():
     url = 'https://e621.net/posts.json'
-
     headers = {
-        'User-Agent': 'FurryTuesdayBot/1.0 (by @F@maksaucer)',
-        'Host': 'e621.net'
+        'User-Agent': USER_AGENT
     }
-
     params = {
         'limit': 1,
         'tags': 'order:score date:day'
     }
 
-    try:
-        response = requests.get(
-            url, 
-            headers=headers,
-            params=params,
-            auth=HTTPBasicAuth(USERNAME, E621_API_KEY),  # Авторизация
-            timeout=10
-        )
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f'Request failed: {e}')
+    async with ClientSession() as session:
+        try:
+            async with session.get(
+                url,
+                headers=headers,
+                params=params,
+                auth=BasicAuth(E621_USERNAME, E621_API_KEY)) as resp:
+                
+                if resp.status == 200:
+                    data = await resp.json()
+                    return data
+                else:
+                    logging.error(f"Error fetching data: {resp.status}")
+        except Exception as e:
+            logging.error(f"Request failed: {e}")
     return None
 
+# Команда /start
+@router.message(Command("start"))
+async def start_handler(message: Message):
+    global chat_id
+    chat_id = message.chat.id
+    await message.answer("Привет! Я бот, который отправляет самую популярную картинку с e621. Напиши /porn!")
 
-# Функция для отправки картинки
-def send_image():
+# Команда /porn
+@router.message(Command("porn"))
+async def porn_handler(message: Message):
+    await send_image()
+
+# Функция отправки картинки
+async def send_image():
+    global chat_id
     if chat_id is not None:
-        image_data = get_most_image_data()
-        if image_data:
-            print(image_data['posts'][0]['sample']['url'])
-            try:            
-                bot.send_photo(
-                    chat_id, 
-                    image_data['posts'][0]['sample']['url'],  
-                    (f"https://e621.net/posts/{image_data['posts'][0]['id']}")
-                )
-                print(f'Sent image to {chat_id}')
+        data = await get_most_image_data()
+        if data and data.get("posts"):
+            post = data["posts"][0]
+            image_url = post["sample"]["url"]
+            post_url = f"https://e621.net/posts/{post['id']}"
+            try:
+                await bot.send_photo(chat_id, image_url, caption=post_url)
+                logging.info(f"Sent image to {chat_id}")
             except Exception as e:
-                print(f'Failed to send image to {chat_id}: {e}')
+                logging.error(f"Failed to send image: {e}")
         else:
-            print(f'Failed to get image URL')
+            logging.warning("No image data received.")
 
-# Расписание для отправки картинки каждые 10 секунд
-#schedule.every(30).seconds.do(send_image)
+# Автоматическая отправка по расписанию 
+async def scheduler():
+    while True:
+        await send_image()
+        await asyncio.sleep(600)  # каждые 10 минут
 
 # Запуск бота
-bot.polling()
+async def main():
+    dp.include_router(router)
+    asyncio.create_task(scheduler())
+    await dp.start_polling(bot)
 
-# Запуск расписания
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+if __name__ == "__main__":
+    asyncio.run(main())
