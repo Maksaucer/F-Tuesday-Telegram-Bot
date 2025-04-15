@@ -1,2 +1,3 @@
 .env
-users_chat_id.json
+*.json
+/__pycache__
