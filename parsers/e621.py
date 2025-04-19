@@ -2,7 +2,7 @@ import random
 import logging
 from aiohttp import ClientSession, BasicAuth
 
-async def fetch_post(e621_username: str, e621_api_key: str, user_agent: str, period: str = "day"):
+async def fetch_post(username: str, api_key: str, user_agent: str, period: str = "day"):
     url = 'https://e621.net/posts.json'
     headers = {
         'User-Agent': user_agent
@@ -12,38 +12,37 @@ async def fetch_post(e621_username: str, e621_api_key: str, user_agent: str, per
         'tags': f"order:score date:{period}"
     }
 
-    async with ClientSession() as session:  
+    async with ClientSession() as session:
         try:
             async with session.get(
                 url,
                 headers=headers,
                 params=params,
-                auth=BasicAuth(e621_username, e621_api_key)
+                auth=BasicAuth(username, api_key)
             ) as resp:
 
                 if resp.status == 200:
                     data = await resp.json()
                     if data and data.get("posts"):
-                        return data["posts"][0]  # Возвращаем один первый пост
+                        return data["posts"][0]
                     else:
                         logging.info("Посты не найдены")
                         return None
                 else:
                     logging.error(f"Ошибка при получении данных: {resp.status}")
                     return None
-
         except Exception as e:
             logging.error(f"Не удалось выполнить запрос к e621: {e}")
             return None
 
-async def fetch_random_post(e621_username: str, e621_api_key: str, user_agent: str):
+async def fetch_random_post(username: str, api_key: str, user_agent: str):
     url = 'https://e621.net/posts.json'
     headers = {
         'User-Agent': user_agent
     }
     params = {
-        'limit': 10,            #
-        'tags': 'order:random'  
+        'limit': 10,
+        'tags': 'order:random'
     }
 
     async with ClientSession() as session:
@@ -52,7 +51,7 @@ async def fetch_random_post(e621_username: str, e621_api_key: str, user_agent: s
                 url,
                 headers=headers,
                 params=params,
-                auth=BasicAuth(e621_username, e621_api_key)
+                auth=BasicAuth(username, api_key)
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
@@ -60,11 +59,10 @@ async def fetch_random_post(e621_username: str, e621_api_key: str, user_agent: s
                     if not posts:
                         logging.info("Случайные посты не найдены.")
                         return None
-                    return random.choice(posts)  # Выбираем любой из полученных
+                    return random.choice(posts)
                 else:
                     logging.error(f"Ошибка при GET-запросе: {resp.status}")
                     return None
         except Exception as e:
-            logging.error(f"Не удалось выполнить GET-запрос k e621: {e}")
+            logging.error(f"Не удалось выполнить GET-запрос к e621: {e}")
             return None
-    
