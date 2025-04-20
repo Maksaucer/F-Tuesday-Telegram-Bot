@@ -1,6 +1,6 @@
 import logging
 from config import E621_USERNAME, E621_API_KEY, USER_AGENT
-from parsers.e621 import fetch_post, fetch_random_post
+from parsers.e621 import fetch_posts, fetch_random_post
 from database.users import get_username, load_users
 from database.filters import get_filters
 from services.filters import is_post_allowed, get_rating_label
@@ -37,13 +37,17 @@ async def send_image(bot: Bot, user_id: int, period: str = "week"):
     filters = await get_filters(user_id)
     username = await get_username(user_id)
 
-    for attempt in range(10):
-        post = await fetch_post(E621_USERNAME, E621_API_KEY, USER_AGENT, period=period)
-        if not post:
-            break
+    posts = await fetch_posts(E621_USERNAME, E621_API_KEY, USER_AGENT, period=period, limit=50)
 
+    if not posts:
+        await bot.send_message(user_id, "😞 Из 50 постов не удалось найти подходящую по вашим фильтрам картинку.")
+        return
+
+    cnt = 0
+    for post in posts:
+        cnt+=1
         if not is_post_allowed(post, filters):
-            logging.info(f"⛔ Пост {post['id']} содержит запрещённые теги для пользователя {user_id} - @{username}, пропущен.")
+            logging.info(f"⛔ Пост {post['id']} содержит запрещённые теги для пользователя {user_id} - @{username}, пропущен. #post[{cnt}]")
             continue
 
         image_url = post["sample"]["url"]

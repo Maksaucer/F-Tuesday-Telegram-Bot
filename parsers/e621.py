@@ -2,13 +2,13 @@ import random
 import logging
 from aiohttp import ClientSession, BasicAuth
 
-async def fetch_post(username: str, api_key: str, user_agent: str, period: str = "day"):
+async def fetch_posts(username: str, api_key: str, user_agent: str, period: str = "day", limit: int = 10):
     url = 'https://e621.net/posts.json'
     headers = {
         'User-Agent': user_agent
     }
     params = {
-        'limit': 1,
+        'limit': limit,
         'tags': f"order:score date:{period}"
     }
 
@@ -20,20 +20,19 @@ async def fetch_post(username: str, api_key: str, user_agent: str, period: str =
                 params=params,
                 auth=BasicAuth(username, api_key)
             ) as resp:
-
                 if resp.status == 200:
                     data = await resp.json()
                     if data and data.get("posts"):
-                        return data["posts"][0]
+                        return data["posts"]
                     else:
                         logging.info("Посты не найдены")
-                        return None
+                        return []
                 else:
                     logging.error(f"Ошибка при получении данных: {resp.status}")
-                    return None
+                    return []
         except Exception as e:
             logging.error(f"Не удалось выполнить запрос к e621: {e}")
-            return None
+            return []
 
 async def fetch_random_post(username: str, api_key: str, user_agent: str):
     url = 'https://e621.net/posts.json'
