@@ -13,7 +13,7 @@ async def start_handler(message: Message):
     user_id = message.chat.id
     username = message.from_user.username
     logging.info(f"▶️ /start от пользователя {user_id}")
-    await add_user(user_id)
+    await add_user(user_id, username)
     await message.answer(
         "Привет! Я бот, который отправляет картинки с e621. Выбери действие:",
         reply_markup=main_menu
