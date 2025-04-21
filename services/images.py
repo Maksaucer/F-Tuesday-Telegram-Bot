@@ -6,7 +6,7 @@ from database.filters import get_filters
 from services.filters import is_post_allowed, get_rating_label
 from aiogram import Bot
 
-FURRY_TUESDAY_CAPTION = "😈 Добро пожаловать на фурри вторник!\n" #temporary 
+FURRY_TUESDAY_CAPTION = "😈 Добро пожаловать на фурри вторник! 😈\n" #temporary 
 
 async def send_random_image(bot: Bot, user_id: int):
     filters = await get_filters(user_id)
