@@ -35,7 +35,6 @@ def is_post_allowed(post: dict, filters: list[str]) -> bool:
 
     # --- 0. Проверка по расширению файла
     file_ext = post.get("file", {}).get("ext", "").lower()
-    print(file_ext)
     if file_ext not in IMAGE_EXTENSIONS:
         return False
 
