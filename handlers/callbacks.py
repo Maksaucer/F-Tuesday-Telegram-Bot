@@ -9,7 +9,7 @@ router = Router()
 async def handle_filter_toggle(callback: CallbackQuery):
     tag_map = {
         "toggle_nsfw": "nsfw",
-        "toggle_male": "male/male"
+        "toggle_gay": "gay"
     }
 
     tag = tag_map.get(callback.data)
