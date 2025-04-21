@@ -1,3 +1,4 @@
+import time
 from aiogram import Router
 from aiogram.types import Message, ReplyKeyboardRemove
 from keyboards import main_menu, get_image_menu, period_menu
@@ -6,6 +7,12 @@ from services.filters import get_filters_inline_keyboard
 from database.users import add_user, get_username, unsubscribe_user
 
 router = Router()
+
+# Храним время последнего запроса для каждого пользователя
+user_cooldowns = {}
+
+# время кулдауна в секундах (например, 10 секунд)
+COOLDOWN_SECONDS = 1
 
 @router.message()
 async def handle_buttons(message: Message):
@@ -18,8 +25,17 @@ async def handle_buttons(message: Message):
     match text:
         case "🔞 Получить картинку":
             await message.answer("Выберите тип картинки:", reply_markup=get_image_menu)
+
         case "🎲 Случайная картинка":
+            now = time.time()
+            last_used = user_cooldowns.get(user_id, 0)
+            if now - last_used < COOLDOWN_SECONDS:
+                remaining = int(COOLDOWN_SECONDS - (now - last_used))
+                await message.answer(f"⏳ Подожди {remaining+1} сек перед следующей случайной картинкой!")
+                return
+            user_cooldowns[user_id] = now
             await send_random_image(bot, user_id)
+
         case "🕰 Лучшая за период":
             await message.answer("Выберите период:", reply_markup=period_menu)
         case "🥉 За день":
