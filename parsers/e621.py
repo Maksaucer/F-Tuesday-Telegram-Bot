@@ -1,3 +1,5 @@
+#parsers/e621.py
+
 import random
 import logging
 from aiohttp import ClientSession, BasicAuth

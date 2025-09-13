@@ -1,3 +1,5 @@
+#services/images.py
+
 import logging
 from config import E621_USERNAME, E621_API_KEY, USER_AGENT
 from parsers.e621 import fetch_posts, fetch_random_post

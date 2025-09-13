@@ -1,3 +1,5 @@
+#keyboards.py
+
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 main_menu = ReplyKeyboardMarkup(

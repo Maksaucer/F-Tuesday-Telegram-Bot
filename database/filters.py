@@ -1,4 +1,4 @@
-# filters.py
+# database/filters.py
 from database import get_db_pool
 
 # Получить список фильтров пользователя
